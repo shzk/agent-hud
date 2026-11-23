@@ -183,8 +183,12 @@ enum PlacementTest {
         let button = CGRect(x: -90, y: 1780, width: 35, height: 24)
         let menu = WindowPlacement.menuFrame(size: size, in: upperLeftDisplay, button: button, offset: nil)
         check("Menu stays below the status item, including its right edge", menu.maxY == button.minY && menu.maxX == 0)
-        let moved = WindowPlacement.menuFrame(size: size, in: upperLeftDisplay, button: button, offset: offset)
-        check("Menu restores the offset from its display", moved.minX == upperLeftDisplay.minX + offset.x && moved.maxY == button.minY - offset.y)
+        let dragOffset = CGPoint(x: 12, y: 45)
+        let moved = WindowPlacement.menuFrame(size: size, in: upperLeftDisplay, button: nil, offset: dragOffset)
+        let restoredWithButton = WindowPlacement.menuFrame(size: size, in: upperLeftDisplay, button: button, offset: dragOffset)
+        check("Menu restores the display-relative offset after the status item becomes available",
+              moved == restoredWithButton && moved.minX == upperLeftDisplay.minX + dragOffset.x &&
+              moved.maxY == upperLeftDisplay.maxY - dragOffset.y)
         let cramped = CGRect(x: 0, y: -570, width: 500, height: 440)
         let tall = WindowPlacement.menuFrame(size: CGSize(width: 340, height: 860), in: cramped, button: nil,
                                              offset: CGPoint(x: 850, y: 500))
@@ -339,8 +343,15 @@ enum UITest {
             menu.resetPosition()
             pump(0.2)
             let reset = menuWindow.frame
-            check("сброс возвращает панель под значок", reset.minX == initial.minX && reset.maxY == initial.maxY,
-                  "\(initial) → \(reset)")
+            let offsetCleared = model.settings.menuOffset(on: menuScreen.placementID) == nil
+            menu.close()
+            menu.show(clickLocation: clickLocation)
+            pump(0.6)
+            let unmodified = menuWindow.frame
+            check("сброс возвращает панель под значок",
+                  offsetCleared && bounds.contains(reset) && reset.maxY > moved.maxY &&
+                  reset.minX == unmodified.minX && reset.maxY == unmodified.maxY,
+                  "\(moved) → \(reset) → \(unmodified)")
         } else {
             check("открытая панель находится на дисплее", false)
         }

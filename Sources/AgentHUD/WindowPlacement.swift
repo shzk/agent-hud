@@ -45,7 +45,10 @@ enum WindowPlacement {
         let top = min(bounds.maxY, button?.minY ?? bounds.maxY)
         let space = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: max(0, top - bounds.minY))
         let fitted = CGSize(width: min(size.width, space.width), height: min(size.height, space.height))
-        if let offset { return HUDCorner.topLeft.frame(size: fitted, in: space, offset: offset) }
+        if let offset {
+            let savedFrame = HUDCorner.topLeft.frame(size: fitted, in: bounds, offset: offset)
+            return contain(savedFrame, in: space)
+        }
         let x = (button?.midX ?? space.maxX) - fitted.width / 2
         return contain(CGRect(x: x, y: space.maxY - fitted.height, width: fitted.width, height: fitted.height), in: space)
     }
