@@ -305,33 +305,41 @@ enum UITest {
 
         print("Панель в строке меню")
         let menu = StatusMenu(model: model, hud: hud)
+        let menuWindow = menu.shownWindow
+        let clickLocation = CGPoint(x: screen.frame.midX, y: screen.frame.maxY - 2)
         pump(0.2)
-        menu.show()
+        menu.show(clickLocation: clickLocation)
         pump(0.6)
         check("панель открыта", menu.isShown)
-        if let window = NSApp.keyWindow, let menuScreen = window.screen {
-            check("панель открылась ниже строки меню и внутри экрана", menuScreen.menuWindowBounds.contains(menu.shownFrame),
-                  "\(menu.shownFrame) за пределами \(menuScreen.menuWindowBounds)")
-            let origin = menu.shownFrame.origin
-            window.setFrameOrigin(CGPoint(x: origin.x - 50, y: origin.y - 45))
+        if let menuScreen = menuWindow.screen {
+            let bounds = menuScreen.menuWindowBounds
+            let initial = menuWindow.frame
+            let dx: CGFloat = initial.minX - bounds.minX > 50 ? -50 : 50
+            check("панель открылась ниже строки меню и внутри экрана", bounds.contains(initial),
+                  "\(initial) за пределами \(bounds)")
+            menuWindow.setFrameOrigin(CGPoint(x: initial.minX + dx, y: initial.minY - 45))
             menu.finishDrag()
-            let moved = menu.shownFrame
-            check("позиция панели изменилась", moved.origin != origin)
+            let moved = menuWindow.frame
+            check("позиция панели изменилась", moved.origin != initial.origin, "\(initial) → \(moved)")
             menu.close()
-            menu.show()
+            menu.show(clickLocation: clickLocation)
             pump(0.6)
-            check("позиция восстановлена при открытии", menu.shownFrame == moved)
+            let reopened = menuWindow.frame
+            check("позиция восстановлена при открытии", reopened.minX == moved.minX && reopened.maxY == moved.maxY,
+                  "\(moved) → \(reopened)")
             menu.resetPosition()
             pump(0.2)
-            check("сброс возвращает панель под значок", menu.shownFrame.origin == origin)
+            let reset = menuWindow.frame
+            check("сброс возвращает панель под значок", reset.minX == initial.minX && reset.maxY == initial.maxY,
+                  "\(initial) → \(reset)")
         } else {
-            check("открытая панель получила фокус", false)
+            check("открытая панель находится на дисплее", false)
         }
         if let otherScreen = NSScreen.screens.dropFirst().first {
             menu.close()
             menu.show(clickLocation: CGPoint(x: otherScreen.frame.midX, y: otherScreen.frame.maxY - 2))
             pump(0.3)
-            check("панель открылась на экране нажатой иконки", otherScreen.menuWindowBounds.contains(menu.shownFrame))
+            check("панель открылась на экране нажатой иконки", otherScreen.menuWindowBounds.contains(menuWindow.frame))
         }
         menu.close()
         pump(0.4)

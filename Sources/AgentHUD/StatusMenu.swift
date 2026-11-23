@@ -60,7 +60,7 @@ final class StatusMenu: NSObject {
     }
 
     var isShown: Bool { window.isVisible }
-    var shownFrame: CGRect { window.frame }
+    var shownWindow: NSWindow { window }
 
     func close() {
         window.orderOut(nil)
