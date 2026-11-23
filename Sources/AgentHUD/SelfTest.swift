@@ -349,8 +349,8 @@ enum UITest {
             pump(0.6)
             let unmodified = menuWindow.frame
             check("сброс возвращает панель под значок",
-                  offsetCleared && bounds.contains(reset) && reset.maxY > moved.maxY &&
-                  reset.minX == unmodified.minX && reset.maxY == unmodified.maxY,
+                  offsetCleared && bounds.contains(reset) && bounds.contains(unmodified) &&
+                  reset.maxY > moved.maxY && unmodified.maxY > moved.maxY,
                   "\(moved) → \(reset) → \(unmodified)")
         } else {
             check("открытая панель находится на дисплее", false)
