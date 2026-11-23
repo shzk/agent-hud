@@ -173,6 +173,13 @@ enum PlacementTest {
             check("HUD \(corner.rawValue) keeps its anchor when resized", corner.offset(of: smaller, in: upperLeftDisplay) == offset)
         }
 
+        let placeholder = CGRect(x: -80, y: 940, width: 18, height: 20)
+        let fullScreen = CGRect(x: -1280, y: 940, width: 1280, height: 900)
+        check("Menu ignores a status item whose window has not been positioned",
+              WindowPlacement.statusButton(placeholder, in: fullScreen, above: upperLeftDisplay) == nil)
+        let positionedButton = CGRect(x: -90, y: 1804, width: 35, height: 24)
+        check("Menu accepts the status item in its display menu bar",
+              WindowPlacement.statusButton(positionedButton, in: fullScreen, above: upperLeftDisplay) == positionedButton)
         let button = CGRect(x: -90, y: 1780, width: 35, height: 24)
         let menu = WindowPlacement.menuFrame(size: size, in: upperLeftDisplay, button: button, offset: nil)
         check("Menu stays below the status item, including its right edge", menu.maxY == button.minY && menu.maxX == 0)
@@ -228,9 +235,11 @@ enum UITest {
         Demo.populate(model)
         let hud = HUDController(model: model)
         hud.updateVisibility()
-        pump(1.0)
         let panel = hud.panel
-        check("панель показана", panel.isVisible)
+        let layoutDeadline = Date().addingTimeInterval(5)
+        while panel.frame.width <= 80, Date() < layoutDeadline { pump(0.05) }
+        check("панель показана и получила размер содержимого", panel.isVisible && panel.frame.width > 80)
+        guard panel.isVisible, panel.frame.width > 80 else { return 1 }
         let h = panel.frame.height, w = panel.frame.width
         check("панель в правом верхнем углу", abs(panel.frame.maxX - screen.visibleFrame.maxX) < 20,
               "\(panel.frame)")
@@ -315,7 +324,7 @@ enum UITest {
             let bounds = menuScreen.menuWindowBounds
             let initial = menuWindow.frame
             let dx: CGFloat = initial.minX - bounds.minX > 50 ? -50 : 50
-            check("панель открылась ниже строки меню и внутри экрана", bounds.contains(initial),
+            check("панель открылась ниже строки меню и внутри экрана", initial.height > 100 && bounds.contains(initial),
                   "\(initial) за пределами \(bounds)")
             menuWindow.setFrameOrigin(CGPoint(x: initial.minX + dx, y: initial.minY - 45))
             menu.finishDrag()

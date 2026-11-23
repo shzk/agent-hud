@@ -35,6 +35,12 @@ enum WindowPlacement {
         return CGRect(x: x, y: y, width: frame.width, height: frame.height)
     }
 
+    static func statusButton(_ frame: CGRect, in screen: CGRect, above bounds: CGRect) -> CGRect? {
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+        guard !frame.isEmpty, screen.contains(center), center.y >= bounds.maxY else { return nil }
+        return frame
+    }
+
     static func menuFrame(size: CGSize, in bounds: CGRect, button: CGRect?, offset: CGPoint?) -> CGRect {
         let top = min(bounds.maxY, button?.minY ?? bounds.maxY)
         let space = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: max(0, top - bounds.minY))

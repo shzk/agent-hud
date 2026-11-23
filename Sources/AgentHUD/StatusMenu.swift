@@ -84,11 +84,9 @@ final class StatusMenu: NSObject {
         guard let screen = clickedScreen ?? statusWindow.screen ?? screens.first else { return }
         screenID = screen.placementID
         buttonScreenID = screen.placementID
-        if screen.frame.contains(CGPoint(x: anchor.midX, y: anchor.midY)) {
-            buttonFrame = anchor
-        } else {
-            buttonFrame = clickLocation.map { CGRect(origin: $0, size: .zero) }
-        }
+        let bounds = screen.menuWindowBounds
+        buttonFrame = WindowPlacement.statusButton(anchor, in: screen.frame, above: bounds)
+            ?? clickLocation.map { CGRect(x: $0.x, y: bounds.maxY, width: 0, height: 0) }
         measuredHeight = 420
         let host = NSHostingController(rootView: content())
         host.sizingOptions = []
@@ -124,7 +122,8 @@ final class StatusMenu: NSObject {
         guard isShown, let screen = placementScreen else { return }
         if let button = item.button, let statusWindow = button.window, let statusScreen = statusWindow.screen {
             buttonScreenID = statusScreen.placementID
-            buttonFrame = statusWindow.convertToScreen(button.convert(button.bounds, to: nil))
+            let anchor = statusWindow.convertToScreen(button.convert(button.bounds, to: nil))
+            buttonFrame = WindowPlacement.statusButton(anchor, in: statusScreen.frame, above: statusScreen.menuWindowBounds)
         } else {
             buttonScreenID = nil
             buttonFrame = nil
